@@ -1,10 +1,10 @@
-import { PrismaClient } from '@prisma/client/edge'
-import { withAccelerate } from '@prisma/extension-accelerate'
+import { PrismaClient } from "@prisma/client/edge";
+import { withAccelerate } from "@prisma/extension-accelerate";
 
 export const createPrismaClient = (databaseUrl: string) => {
   const prisma = new PrismaClient({
     datasourceUrl: databaseUrl,
-  }).$extends(withAccelerate())
-  
-  return prisma
-}
+  }).$extends(withAccelerate());
+
+  return prisma;
+};
