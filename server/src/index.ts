@@ -1,8 +1,10 @@
 import { Hono } from "hono";
 import { createPrismaClient } from "./db";
+import { decode, sign, verify } from 'hono/jwt';
 
 type Bindings = {
   DATABASE_URL: string;
+  JWT_SECRET: string;
 };
 
 const app = new Hono<{ Bindings: Bindings }>();
@@ -18,7 +20,10 @@ app.post("/api/v1/user/signup", async (c) => {
     const user = await prisma.user.create({
       data: { name, username, password },
     });
-    return c.json({ user });
+
+    const jwt = await sign({ userId: user.id }, c.env.JWT_SECRET);
+
+    return c.json({ user, jwt });
   } catch (error) {
     console.error("Error creating user:", error);
     return c.json({ error: "User creation failed" }, 500);
