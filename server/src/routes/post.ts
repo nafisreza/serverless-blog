@@ -141,7 +141,7 @@ postRouter.get("/author/:authorId", async (c) => {
         id: "desc",
       },
     });
-
+    
     return c.json({ posts });
   } catch (error) {
     return c.json({ error: "Failed to fetch author posts" }, 500);
