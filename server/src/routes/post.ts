@@ -3,6 +3,7 @@ import { createPrismaClient } from "../db";
 import { Bindings, Variables } from "../types";
 import { requireAuth } from "../middlewares/auth";
 import { verifyPostOwnership } from "../middlewares/post";
+import { blogCreateInput, blogUpdateInput } from "@nafisreza/blog";
 
 const postRouter = new Hono<{ Bindings: Bindings; Variables: Variables }>();
 
@@ -10,11 +11,18 @@ const postRouter = new Hono<{ Bindings: Bindings; Variables: Variables }>();
 postRouter.post("/", requireAuth, async (c) => {
   const userId = c.get("userId");
   const prisma = createPrismaClient(c.env.DATABASE_URL);
-  const { title, content } = await c.req.json();
+  const body = await c.req.json();
 
-  if (!title || !content) {
-    return c.json({ error: "Title and content are required" }, 400);
+  const validation = blogCreateInput.safeParse(body);
+
+  if (!validation.success) {
+    return c.json({
+      error: "Title and content are required",
+      details: validation.error.issues
+    }, 400);
   }
+
+  const { title, content } = validation.data;
 
   try {
     const post = await prisma.post.create({
@@ -141,7 +149,7 @@ postRouter.get("/author/:authorId", async (c) => {
         id: "desc",
       },
     });
-    
+
     return c.json({ posts });
   } catch (error) {
     return c.json({ error: "Failed to fetch author posts" }, 500);
@@ -152,10 +160,25 @@ postRouter.get("/author/:authorId", async (c) => {
 postRouter.put("/:id", requireAuth, verifyPostOwnership, async (c) => {
   const prisma = createPrismaClient(c.env.DATABASE_URL);
   const id = parseInt(c.req.param("id"));
-  const { title, content, published } = await c.req.json();
+  
+  if (isNaN(id)) {
+    return c.json({ error: "Invalid post ID" }, 400);
+  }
+
+  const body = await c.req.json();
+
+  const validation = blogUpdateInput.safeParse(body);
+  if (!validation.success) {
+    return c.json({
+      error: "Invalid input",
+      details: validation.error.issues
+    }, 400);
+  }
+
+  const { title, content, published } = validation.data;
 
   try {
-    // update data object with only provided fields
+    // update data with only provided fields
     const updateData: any = {};
     if (title !== undefined) updateData.title = title;
     if (content !== undefined) updateData.content = content;

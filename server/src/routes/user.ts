@@ -3,12 +3,23 @@ import { createPrismaClient } from "../db";
 import { sign } from "hono/jwt";
 import bcrypt from "bcryptjs";
 import { Bindings } from "../types";
+import { signupInput, signinInput } from "@nafisreza/blog";
 
 const userRouter = new Hono<{ Bindings: Bindings }>();
 
 userRouter.post("/register", async (c) => {
   try {
-    const { name, username, password } = await c.req.json();
+    const body = await c.req.json();
+    
+    const validation = signupInput.safeParse(body);
+    if (!validation.success) {
+      return c.json({ 
+        error: "Invalid input", 
+        details: validation.error.issues 
+      }, 400);
+    }
+
+    const { name, username, password } = validation.data;
 
     const hashedPass = await bcrypt.hash(password, 10);
 
@@ -28,14 +39,27 @@ userRouter.post("/register", async (c) => {
 
 userRouter.post("/login", async (c) => {
   try {
-    const { username, password } = await c.req.json();
+    const body = await c.req.json();
+    
+    const validation = signinInput.safeParse(body);
+    if (!validation.success) {
+      return c.json({ 
+        error: "Invalid input", 
+        details: validation.error.issues 
+      }, 400);
+    }
+
+    const { username, password } = validation.data;
+    
     const prisma = createPrismaClient(c.env.DATABASE_URL);
     const user = await prisma.user.findUnique({
       where: { username },
     });
+    
     if (!user) {
       return c.json({ error: "User does not exist" }, 404);
     }
+    
     const isPasswordValid = await bcrypt.compare(password, user.password);
     if (!isPasswordValid) {
       return c.json({ error: "Invalid username or password" }, 403);
