@@ -1,0 +1,17 @@
+{
+  "name": "@nafisreza/blog",
+  "type": "module",
+  "version": "1.0.3",
+  "main": "dist/index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "dependencies": {
+    "typescript": "^5.9.3",
+    "zod": "^4.1.12"
+  }
+}
