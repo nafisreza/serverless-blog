@@ -6,7 +6,7 @@ import { Bindings } from "../types";
 
 const userRouter = new Hono<{ Bindings: Bindings }>();
 
-userRouter.post("/api/v1/user/register", async (c) => {
+userRouter.post("/register", async (c) => {
   try {
     const { name, username, password } = await c.req.json();
 
@@ -17,7 +17,7 @@ userRouter.post("/api/v1/user/register", async (c) => {
       data: { name, username, password: hashedPass },
     });
 
-    const jwt = await sign({ userId: user.id }, c.env.JWT_SECRET);
+    const jwt = await sign({ id: user.id }, c.env.JWT_SECRET);
 
     return c.json({ user, jwt });
   } catch (error) {
@@ -26,7 +26,7 @@ userRouter.post("/api/v1/user/register", async (c) => {
   }
 });
 
-userRouter.post("/api/v1/user/login", async (c) => {
+userRouter.post("/login", async (c) => {
   try {
     const { username, password } = await c.req.json();
     const prisma = createPrismaClient(c.env.DATABASE_URL);
@@ -41,7 +41,7 @@ userRouter.post("/api/v1/user/login", async (c) => {
       return c.json({ error: "Invalid username or password" }, 403);
     }
 
-    const jwt = await sign({ userId: user.id }, c.env.JWT_SECRET);
+    const jwt = await sign({ id: user.id }, c.env.JWT_SECRET);
     return c.json({ user, jwt });
   } catch (error) {
     console.error("Error during login:", error);
@@ -50,4 +50,3 @@ userRouter.post("/api/v1/user/login", async (c) => {
 });
 
 export default userRouter;
-
